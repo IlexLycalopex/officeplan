@@ -18,6 +18,7 @@ export type Database = {
         }
         Insert: Omit<Database['public']['Tables']['organisations']['Row'], 'id' | 'created_at' | 'updated_at'>
         Update: Partial<Database['public']['Tables']['organisations']['Insert']>
+        Relationships: []
       }
       departments: {
         Row: {
@@ -31,6 +32,7 @@ export type Database = {
         }
         Insert: Omit<Database['public']['Tables']['departments']['Row'], 'id' | 'created_at' | 'updated_at'>
         Update: Partial<Database['public']['Tables']['departments']['Insert']>
+        Relationships: []
       }
       teams: {
         Row: {
@@ -45,6 +47,7 @@ export type Database = {
         }
         Insert: Omit<Database['public']['Tables']['teams']['Row'], 'id' | 'created_at' | 'updated_at'>
         Update: Partial<Database['public']['Tables']['teams']['Insert']>
+        Relationships: []
       }
       users: {
         Row: {
@@ -68,6 +71,7 @@ export type Database = {
         }
         Insert: Omit<Database['public']['Tables']['users']['Row'], 'id' | 'created_at' | 'updated_at'>
         Update: Partial<Database['public']['Tables']['users']['Insert']>
+        Relationships: []
       }
       offices: {
         Row: {
@@ -83,6 +87,7 @@ export type Database = {
         }
         Insert: Omit<Database['public']['Tables']['offices']['Row'], 'id' | 'created_at' | 'updated_at'>
         Update: Partial<Database['public']['Tables']['offices']['Insert']>
+        Relationships: []
       }
       floors: {
         Row: {
@@ -99,6 +104,15 @@ export type Database = {
         }
         Insert: Omit<Database['public']['Tables']['floors']['Row'], 'id' | 'created_at' | 'updated_at'>
         Update: Partial<Database['public']['Tables']['floors']['Insert']>
+        Relationships: [
+          {
+            foreignKeyName: 'floors_office_id_fkey'
+            columns: ['office_id']
+            isOneToOne: false
+            referencedRelation: 'offices'
+            referencedColumns: ['id']
+          }
+        ]
       }
       workspace_assets: {
         Row: {
@@ -123,6 +137,15 @@ export type Database = {
         }
         Insert: Omit<Database['public']['Tables']['workspace_assets']['Row'], 'id' | 'created_at' | 'updated_at'>
         Update: Partial<Database['public']['Tables']['workspace_assets']['Insert']>
+        Relationships: [
+          {
+            foreignKeyName: 'workspace_assets_floor_id_fkey'
+            columns: ['floor_id']
+            isOneToOne: false
+            referencedRelation: 'floors'
+            referencedColumns: ['id']
+          }
+        ]
       }
       bookings: {
         Row: {
@@ -142,6 +165,22 @@ export type Database = {
         }
         Insert: Omit<Database['public']['Tables']['bookings']['Row'], 'id' | 'created_at' | 'updated_at'>
         Update: Partial<Database['public']['Tables']['bookings']['Insert']>
+        Relationships: [
+          {
+            foreignKeyName: 'bookings_asset_id_fkey'
+            columns: ['asset_id']
+            isOneToOne: false
+            referencedRelation: 'workspace_assets'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'bookings_user_id_fkey'
+            columns: ['user_id']
+            isOneToOne: false
+            referencedRelation: 'users'
+            referencedColumns: ['id']
+          }
+        ]
       }
       attendance_plans: {
         Row: {
@@ -156,6 +195,7 @@ export type Database = {
         }
         Insert: Omit<Database['public']['Tables']['attendance_plans']['Row'], 'id' | 'created_at' | 'updated_at'>
         Update: Partial<Database['public']['Tables']['attendance_plans']['Insert']>
+        Relationships: []
       }
       approval_requests: {
         Row: {
@@ -173,6 +213,22 @@ export type Database = {
         }
         Insert: Omit<Database['public']['Tables']['approval_requests']['Row'], 'id' | 'created_at' | 'updated_at'>
         Update: Partial<Database['public']['Tables']['approval_requests']['Insert']>
+        Relationships: [
+          {
+            foreignKeyName: 'approval_requests_requester_user_id_fkey'
+            columns: ['requester_user_id']
+            isOneToOne: false
+            referencedRelation: 'users'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'approval_requests_target_booking_id_fkey'
+            columns: ['target_booking_id']
+            isOneToOne: false
+            referencedRelation: 'bookings'
+            referencedColumns: ['id']
+          }
+        ]
       }
       notification_preferences: {
         Row: {
@@ -187,6 +243,7 @@ export type Database = {
         }
         Insert: Omit<Database['public']['Tables']['notification_preferences']['Row'], 'id' | 'created_at' | 'updated_at'>
         Update: Partial<Database['public']['Tables']['notification_preferences']['Insert']>
+        Relationships: []
       }
       notification_schedules: {
         Row: {
@@ -202,6 +259,7 @@ export type Database = {
         }
         Insert: Omit<Database['public']['Tables']['notification_schedules']['Row'], 'id' | 'created_at' | 'updated_at'>
         Update: Partial<Database['public']['Tables']['notification_schedules']['Insert']>
+        Relationships: []
       }
       audit_events: {
         Row: {
@@ -215,6 +273,7 @@ export type Database = {
         }
         Insert: Omit<Database['public']['Tables']['audit_events']['Row'], 'id' | 'event_time'>
         Update: Partial<Database['public']['Tables']['audit_events']['Insert']>
+        Relationships: []
       }
     }
     Views: {
@@ -270,26 +329,26 @@ export type Database = {
           p_asset_id: string
           p_user_id: string
           p_booking_date: string
-          p_start_time?: string
-          p_end_time?: string
-          p_notes?: string
+          p_start_time?: string | null
+          p_end_time?: string | null
+          p_notes?: string | null
         }
         Returns: Json
       }
       fn_cancel_booking: {
-        Args: { p_booking_id: string; p_reason?: string }
+        Args: { p_booking_id: string; p_reason?: string | null }
         Returns: Json
       }
       fn_decide_approval: {
-        Args: { p_request_id: string; p_decision: string; p_notes?: string }
+        Args: { p_request_id: string; p_decision: string; p_notes?: string | null }
         Returns: Json
       }
       fn_upsert_attendance: {
         Args: {
           p_work_date: string
           p_status: string
-          p_linked_booking_id?: string
-          p_notes?: string
+          p_linked_booking_id?: string | null
+          p_notes?: string | null
         }
         Returns: Json
       }

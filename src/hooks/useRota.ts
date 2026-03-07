@@ -16,8 +16,8 @@ export function useMyAttendance(weekDates: Date[]) {
         .from('attendance_plans')
         .select('*')
         .eq('user_id', profile!.id)
-        .gte('work_date', from)
-        .lte('work_date', to)
+        .gte('work_date', from as string)
+        .lte('work_date', to as string)
       if (error) throw error
       return data
     },

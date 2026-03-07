@@ -1,5 +1,4 @@
 import { Menu, LogOut, Bell } from 'lucide-react'
-import { useAuth } from '@/stores/authStore'
 import { signOut } from '@/lib/auth'
 import { useNavigate } from 'react-router-dom'
 import { format } from 'date-fns'
@@ -9,7 +8,6 @@ interface Props {
 }
 
 export function Header({ onMenuClick }: Props) {
-  const { profile } = useAuth()
   const navigate = useNavigate()
 
   async function handleSignOut() {
