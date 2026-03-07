@@ -38,7 +38,7 @@ jobs:
         run: pnpm typecheck
 
       - name: Run unit tests
-        run: pnpm test --run
+        run: pnpm exec vitest run
 
       - name: Build
         env:
