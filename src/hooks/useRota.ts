@@ -13,6 +13,9 @@ type TeamAttendanceRow = {
   linked_booking_id: string | null
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const sb = supabase as any
+
 export function useMyAttendance(weekDates: Date[]) {
   const { profile } = useAuth()
   const from = weekDates[0]?.toISOString().slice(0, 10)
@@ -22,14 +25,14 @@ export function useMyAttendance(weekDates: Date[]) {
     queryKey: ['attendance', 'mine', from, to],
     enabled: !!profile && !!from,
     queryFn: async (): Promise<Tables<'attendance_plans'>[]> => {
-      const { data, error } = await supabase
+      const { data, error } = await sb
         .from('attendance_plans')
         .select('*')
         .eq('user_id', profile!.id)
         .gte('work_date', from as string)
         .lte('work_date', to as string)
       if (error) throw error
-      return (data ?? []) as unknown as Tables<'attendance_plans'>[]
+      return (data ?? []) as Tables<'attendance_plans'>[]
     },
   })
 }
@@ -39,14 +42,14 @@ export function useTeamAttendance(teamId: string | null, from: string, to: strin
     queryKey: ['attendance', 'team', teamId, from, to],
     enabled: !!teamId,
     queryFn: async (): Promise<TeamAttendanceRow[]> => {
-      const { data, error } = await supabase
+      const { data, error } = await sb
         .from('v_team_attendance')
         .select('*')
         .eq('team_id', teamId!)
         .gte('work_date', from)
         .lte('work_date', to)
       if (error) throw error
-      return (data ?? []) as unknown as TeamAttendanceRow[]
+      return (data ?? []) as TeamAttendanceRow[]
     },
   })
 }
@@ -60,8 +63,7 @@ export function useUpsertAttendance() {
       linkedBookingId?: string
       notes?: string
     }) => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data, error } = await (supabase.rpc as any)('fn_upsert_attendance', {
+      const { data, error } = await sb.rpc('fn_upsert_attendance', {
         p_work_date: params.workDate,
         p_status: params.status,
         p_linked_booking_id: params.linkedBookingId ?? null,

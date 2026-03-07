@@ -11,11 +11,14 @@ type MyApproval = Tables<'approval_requests'> & {
   bookings: unknown
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const sb = supabase as any
+
 export function usePendingApprovals() {
   return useQuery({
     queryKey: ['approvals', 'pending'],
     queryFn: async (): Promise<PendingApproval[]> => {
-      const { data, error } = await supabase
+      const { data, error } = await sb
         .from('approval_requests')
         .select(`
           *,
@@ -30,7 +33,7 @@ export function usePendingApprovals() {
         .eq('status', 'pending')
         .order('created_at')
       if (error) throw error
-      return (data ?? []) as unknown as PendingApproval[]
+      return (data ?? []) as PendingApproval[]
     },
   })
 }
@@ -39,7 +42,7 @@ export function useMyApprovals() {
   return useQuery({
     queryKey: ['approvals', 'mine'],
     queryFn: async (): Promise<MyApproval[]> => {
-      const { data, error } = await supabase
+      const { data, error } = await sb
         .from('approval_requests')
         .select(`
           *,
@@ -48,7 +51,7 @@ export function useMyApprovals() {
         .order('created_at', { ascending: false })
         .limit(20)
       if (error) throw error
-      return (data ?? []) as unknown as MyApproval[]
+      return (data ?? []) as MyApproval[]
     },
   })
 }
@@ -65,8 +68,7 @@ export function useDecideApproval() {
       decision: 'approved' | 'rejected'
       notes?: string
     }) => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data, error } = await (supabase.rpc as any)('fn_decide_approval', {
+      const { data, error } = await sb.rpc('fn_decide_approval', {
         p_request_id: requestId,
         p_decision: decision,
         p_notes: notes ?? null,

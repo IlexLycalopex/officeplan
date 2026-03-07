@@ -7,11 +7,14 @@ import type { Tables } from '@/types/database'
 type User = Tables<'users'>
 type UserWithDepts = Tables<'users'> & { departments: unknown; teams: unknown; offices: unknown }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const sb = supabase as any
+
 function useAllUsers() {
   return useQuery({
     queryKey: ['admin', 'users'],
     queryFn: async (): Promise<UserWithDepts[]> => {
-      const { data, error } = await supabase
+      const { data, error } = await sb
         .from('users')
         .select(`*, departments(name), teams(name), offices:primary_office_id(name)`)
         .order('last_name')
@@ -28,7 +31,7 @@ export default function AdminUsers() {
 
   const toggleStatus = useMutation({
     mutationFn: async ({ id, status }: { id: string; status: 'active' | 'inactive' }) => {
-      const { error } = await supabase.from('users').update({ status }).eq('id', id)
+      const { error } = await sb.from('users').update({ status }).eq('id', id)
       if (error) throw error
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['admin', 'users'] }),
@@ -36,7 +39,7 @@ export default function AdminUsers() {
 
   const changeRole = useMutation({
     mutationFn: async ({ id, role }: { id: string; role: User['role'] }) => {
-      const { error } = await supabase.from('users').update({ role }).eq('id', id)
+      const { error } = await sb.from('users').update({ role }).eq('id', id)
       if (error) throw error
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['admin', 'users'] }),

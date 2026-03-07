@@ -14,13 +14,16 @@ type FloorBooking = {
   users: unknown
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const sb = supabase as any
+
 export function useMyBookings(from?: string, to?: string) {
   const { profile } = useAuth()
   return useQuery({
     queryKey: ['bookings', 'mine', from, to],
     enabled: !!profile,
     queryFn: async (): Promise<BookingWithAsset[]> => {
-      let q = supabase
+      let q = sb
         .from('bookings')
         .select(`
           *,
@@ -38,7 +41,7 @@ export function useMyBookings(from?: string, to?: string) {
 
       const { data, error } = await q
       if (error) throw error
-      return (data ?? []) as unknown as BookingWithAsset[]
+      return (data ?? []) as BookingWithAsset[]
     },
   })
 }
@@ -48,13 +51,13 @@ export function useFloorBookings(floorId: string | null, date: string) {
     queryKey: ['bookings', 'floor', floorId, date],
     enabled: !!floorId,
     queryFn: async (): Promise<FloorBooking[]> => {
-      const { data, error } = await supabase
+      const { data, error } = await sb
         .from('bookings')
         .select('asset_id, user_id, status, users(first_name, last_name)')
         .eq('booking_date', date)
         .in('status', ['confirmed', 'pending_approval'])
       if (error) throw error
-      return (data ?? []) as unknown as FloorBooking[]
+      return (data ?? []) as FloorBooking[]
     },
     staleTime: 30_000,
   })
@@ -71,8 +74,7 @@ export function useCreateBooking() {
       endTime?: string
       notes?: string
     }) => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data, error } = await (supabase.rpc as any)('fn_create_booking', {
+      const { data, error } = await sb.rpc('fn_create_booking', {
         p_asset_id: params.assetId,
         p_user_id: params.userId,
         p_booking_date: params.date,
@@ -94,8 +96,7 @@ export function useCancelBooking() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: async ({ bookingId, reason }: { bookingId: string; reason?: string }) => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data, error } = await (supabase.rpc as any)('fn_cancel_booking', {
+      const { data, error } = await sb.rpc('fn_cancel_booking', {
         p_booking_id: bookingId,
         p_reason: reason ?? null,
       })

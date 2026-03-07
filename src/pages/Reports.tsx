@@ -7,12 +7,15 @@ import { isoDateString } from '@/lib/utils'
 import type { Views } from '@/types/database'
 import { format, subDays } from 'date-fns'
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const sb = supabase as any
+
 function useDailyOccupancy(officeId: string | null, from: string, to: string) {
   return useQuery({
     queryKey: ['report', 'daily-occupancy', officeId, from, to],
     enabled: !!officeId,
     queryFn: async (): Promise<Views<'v_daily_occupancy'>[]> => {
-      let q = supabase
+      let q = sb
         .from('v_daily_occupancy')
         .select('*')
         .gte('booking_date', from)
@@ -30,7 +33,7 @@ function useUtilisation(officeId: string | null) {
   return useQuery({
     queryKey: ['report', 'utilisation', officeId],
     queryFn: async (): Promise<Views<'v_utilisation'>[]> => {
-      const { data, error } = await supabase
+      const { data, error } = await sb
         .from('v_utilisation')
         .select('*')
         .order('utilisation_pct_30d', { ascending: false })
@@ -45,7 +48,7 @@ function useOfficeList() {
   return useQuery({
     queryKey: ['offices'],
     queryFn: async (): Promise<Array<{ id: string; name: string }>> => {
-      const { data, error } = await supabase.from('offices').select('id, name').eq('active_flag', true)
+      const { data, error } = await sb.from('offices').select('id, name').eq('active_flag', true)
       if (error) throw error
       return (data ?? []) as unknown as Array<{ id: string; name: string }>
     },

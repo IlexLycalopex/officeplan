@@ -7,6 +7,9 @@ import { useFloorAssetsAdmin, useOffices, useFloor } from '@/hooks/useFloor'
 import { FloorMap } from '@/components/floor-map/FloorMap'
 import type { Tables } from '@/types/database'
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const sb = supabase as any
+
 type Asset = Tables<'workspace_assets'>
 type AssetType = Asset['asset_type']
 
@@ -37,7 +40,7 @@ export default function AdminFloorEditor() {
   const addAsset = useMutation({
     mutationFn: async () => {
       if (!selectedFloorId || !newCode) return
-      const { error } = await supabase.from('workspace_assets').insert({
+      const { error } = await sb.from('workspace_assets').insert({
         floor_id: selectedFloorId,
         asset_type: selectedPalette.type,
         code: newCode,
@@ -62,7 +65,7 @@ export default function AdminFloorEditor() {
     mutationFn: async () => {
       if (!selectedFloorId) return
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { error } = await (supabase.rpc as any)('publish_floor_layout', { p_floor_id: selectedFloorId })
+      const { error } = await sb.rpc('publish_floor_layout', { p_floor_id: selectedFloorId })
       if (error) throw error
     },
     onSuccess: () => {

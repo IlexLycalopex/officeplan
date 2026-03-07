@@ -6,11 +6,14 @@ import type { Tables } from '@/types/database'
 
 type OfficeWithFloors = Tables<'offices'> & { floors: unknown }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const sb = supabase as any
+
 function useOfficesWithFloors() {
   return useQuery({
     queryKey: ['admin', 'offices'],
     queryFn: async (): Promise<OfficeWithFloors[]> => {
-      const { data, error } = await supabase
+      const { data, error } = await sb
         .from('offices')
         .select('*, floors(id, name, sequence, active_flag)')
         .order('name')
@@ -30,8 +33,8 @@ export default function AdminOffices() {
 
   const addOffice = useMutation({
     mutationFn: async () => {
-      const orgId = (await supabase.from('organisations').select('id').single()).data?.id
-      const { error } = await supabase.from('offices').insert({
+      const orgId = (await sb.from('organisations').select('id').single()).data?.id
+      const { error } = await sb.from('offices').insert({
         organisation_id: orgId!,
         ...newOffice,
       })
@@ -47,7 +50,7 @@ export default function AdminOffices() {
   const addFloor = useMutation({
     mutationFn: async ({ officeId, name }: { officeId: string; name: string }) => {
       const floors = offices?.find(o => o.id === officeId)?.floors as { sequence?: number }[] | null ?? []
-      const { error } = await supabase.from('floors').insert({
+      const { error } = await sb.from('floors').insert({
         office_id: officeId,
         name,
         sequence: (floors.length ?? 0) + 1,

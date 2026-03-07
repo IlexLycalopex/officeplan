@@ -3,11 +3,14 @@ import type { Tables } from '@/types/database'
 import { supabase } from '@/lib/supabase'
 import { format } from 'date-fns'
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const sb = supabase as any
+
 function useSchedules() {
   return useQuery({
     queryKey: ['admin', 'schedules'],
     queryFn: async (): Promise<Tables<'notification_schedules'>[]> => {
-      const { data, error } = await supabase
+      const { data, error } = await sb
         .from('notification_schedules')
         .select('*')
         .order('schedule_type')
@@ -30,7 +33,7 @@ export default function AdminSchedules() {
 
   const toggle = useMutation({
     mutationFn: async ({ id, active }: { id: string; active: boolean }) => {
-      const { error } = await supabase
+      const { error } = await sb
         .from('notification_schedules')
         .update({ active_flag: active })
         .eq('id', id)
@@ -41,7 +44,7 @@ export default function AdminSchedules() {
 
   const updateCron = useMutation({
     mutationFn: async ({ id, cron }: { id: string; cron: string }) => {
-      const { error } = await supabase
+      const { error } = await sb
         .from('notification_schedules')
         .update({ cron_expression: cron })
         .eq('id', id)

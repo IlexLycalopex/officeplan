@@ -28,11 +28,13 @@ export default function Profile() {
   }, [profile])
 
   // Notification preferences
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const sb = supabase as any
   const { data: prefs } = useQuery({
     queryKey: ['notif-prefs'],
     enabled: !!profile,
     queryFn: async (): Promise<Tables<'notification_preferences'> | null> => {
-      const { data, error } = await supabase
+      const { data, error } = await sb
         .from('notification_preferences')
         .select('*')
         .eq('user_id', profile!.id)
@@ -54,14 +56,14 @@ export default function Profile() {
   const updateProfile = useMutation({
     mutationFn: async () => {
       if (!profile) return
-      const { error } = await supabase
+      const { error } = await sb
         .from('users')
         .update({ first_name: firstName, last_name: lastName, job_title: jobTitle,
                   normal_working_days: workingDays, normal_office_days: officeDays })
         .eq('id', profile.id)
       if (error) throw error
 
-      await supabase
+      await sb
         .from('notification_preferences')
         .upsert({ user_id: profile.id, weekly_digest: weeklyDigest, daily_digest: dailyDigest })
     },

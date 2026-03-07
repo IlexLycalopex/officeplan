@@ -25,11 +25,14 @@ const STATUS_LABEL: Record<string, string> = {
 
 type Team = { id: string; name: string; department_id: string | null }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const sb = supabase as any
+
 function useTeams() {
   return useQuery({
     queryKey: ['teams'],
     queryFn: async (): Promise<Team[]> => {
-      const { data, error } = await supabase
+      const { data, error } = await sb
         .from('teams')
         .select('id, name, department_id')
         .eq('active_flag', true)
