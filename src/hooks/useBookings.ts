@@ -1,13 +1,25 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/stores/authStore'
+import type { Tables } from '@/types/database'
+
+type BookingWithAsset = Tables<'bookings'> & {
+  workspace_assets: unknown
+}
+
+type FloorBooking = {
+  asset_id: string
+  user_id: string
+  status: string
+  users: unknown
+}
 
 export function useMyBookings(from?: string, to?: string) {
   const { profile } = useAuth()
   return useQuery({
     queryKey: ['bookings', 'mine', from, to],
     enabled: !!profile,
-    queryFn: async () => {
+    queryFn: async (): Promise<BookingWithAsset[]> => {
       let q = supabase
         .from('bookings')
         .select(`
@@ -26,7 +38,7 @@ export function useMyBookings(from?: string, to?: string) {
 
       const { data, error } = await q
       if (error) throw error
-      return data
+      return (data ?? []) as unknown as BookingWithAsset[]
     },
   })
 }
@@ -35,14 +47,14 @@ export function useFloorBookings(floorId: string | null, date: string) {
   return useQuery({
     queryKey: ['bookings', 'floor', floorId, date],
     enabled: !!floorId,
-    queryFn: async () => {
+    queryFn: async (): Promise<FloorBooking[]> => {
       const { data, error } = await supabase
         .from('bookings')
         .select('asset_id, user_id, status, users(first_name, last_name)')
         .eq('booking_date', date)
         .in('status', ['confirmed', 'pending_approval'])
       if (error) throw error
-      return data
+      return (data ?? []) as unknown as FloorBooking[]
     },
     staleTime: 30_000,
   })
@@ -59,7 +71,8 @@ export function useCreateBooking() {
       endTime?: string
       notes?: string
     }) => {
-      const { data, error } = await supabase.rpc('fn_create_booking', {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data, error } = await (supabase.rpc as any)('fn_create_booking', {
         p_asset_id: params.assetId,
         p_user_id: params.userId,
         p_booking_date: params.date,
@@ -81,7 +94,8 @@ export function useCancelBooking() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: async ({ bookingId, reason }: { bookingId: string; reason?: string }) => {
-      const { data, error } = await supabase.rpc('fn_cancel_booking', {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data, error } = await (supabase.rpc as any)('fn_cancel_booking', {
         p_booking_id: bookingId,
         p_reason: reason ?? null,
       })

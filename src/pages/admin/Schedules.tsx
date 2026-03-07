@@ -1,17 +1,18 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import type { Tables } from '@/types/database'
 import { supabase } from '@/lib/supabase'
 import { format } from 'date-fns'
 
 function useSchedules() {
   return useQuery({
     queryKey: ['admin', 'schedules'],
-    queryFn: async () => {
+    queryFn: async (): Promise<Tables<'notification_schedules'>[]> => {
       const { data, error } = await supabase
         .from('notification_schedules')
         .select('*')
         .order('schedule_type')
       if (error) throw error
-      return data
+      return (data ?? []) as unknown as Tables<'notification_schedules'>[]
     },
   })
 }

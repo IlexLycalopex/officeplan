@@ -5,17 +5,18 @@ import { supabase } from '@/lib/supabase'
 import type { Tables } from '@/types/database'
 
 type User = Tables<'users'>
+type UserWithDepts = Tables<'users'> & { departments: unknown; teams: unknown; offices: unknown }
 
 function useAllUsers() {
   return useQuery({
     queryKey: ['admin', 'users'],
-    queryFn: async () => {
+    queryFn: async (): Promise<UserWithDepts[]> => {
       const { data, error } = await supabase
         .from('users')
         .select(`*, departments(name), teams(name), offices:primary_office_id(name)`)
         .order('last_name')
       if (error) throw error
-      return data
+      return (data ?? []) as unknown as UserWithDepts[]
     },
   })
 }

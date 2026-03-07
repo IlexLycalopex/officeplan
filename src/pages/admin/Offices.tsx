@@ -2,17 +2,20 @@ import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Plus, ChevronDown, ChevronRight } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
+import type { Tables } from '@/types/database'
+
+type OfficeWithFloors = Tables<'offices'> & { floors: unknown }
 
 function useOfficesWithFloors() {
   return useQuery({
     queryKey: ['admin', 'offices'],
-    queryFn: async () => {
+    queryFn: async (): Promise<OfficeWithFloors[]> => {
       const { data, error } = await supabase
         .from('offices')
         .select('*, floors(id, name, sequence, active_flag)')
         .order('name')
       if (error) throw error
-      return data
+      return (data ?? []) as unknown as OfficeWithFloors[]
     },
   })
 }

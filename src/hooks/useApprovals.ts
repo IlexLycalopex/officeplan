@@ -1,10 +1,20 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase'
+import type { Tables } from '@/types/database'
+
+type PendingApproval = Tables<'approval_requests'> & {
+  requester: unknown
+  bookings: unknown
+}
+
+type MyApproval = Tables<'approval_requests'> & {
+  bookings: unknown
+}
 
 export function usePendingApprovals() {
   return useQuery({
     queryKey: ['approvals', 'pending'],
-    queryFn: async () => {
+    queryFn: async (): Promise<PendingApproval[]> => {
       const { data, error } = await supabase
         .from('approval_requests')
         .select(`
@@ -20,7 +30,7 @@ export function usePendingApprovals() {
         .eq('status', 'pending')
         .order('created_at')
       if (error) throw error
-      return data
+      return (data ?? []) as unknown as PendingApproval[]
     },
   })
 }
@@ -28,7 +38,7 @@ export function usePendingApprovals() {
 export function useMyApprovals() {
   return useQuery({
     queryKey: ['approvals', 'mine'],
-    queryFn: async () => {
+    queryFn: async (): Promise<MyApproval[]> => {
       const { data, error } = await supabase
         .from('approval_requests')
         .select(`
@@ -38,7 +48,7 @@ export function useMyApprovals() {
         .order('created_at', { ascending: false })
         .limit(20)
       if (error) throw error
-      return data
+      return (data ?? []) as unknown as MyApproval[]
     },
   })
 }
@@ -55,7 +65,8 @@ export function useDecideApproval() {
       decision: 'approved' | 'rejected'
       notes?: string
     }) => {
-      const { data, error } = await supabase.rpc('fn_decide_approval', {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data, error } = await (supabase.rpc as any)('fn_decide_approval', {
         p_request_id: requestId,
         p_decision: decision,
         p_notes: notes ?? null,

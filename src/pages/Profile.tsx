@@ -2,6 +2,7 @@ import { useState, useEffect, type FormEvent } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/stores/authStore'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import type { Tables } from '@/types/database'
 
 const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 
@@ -30,14 +31,14 @@ export default function Profile() {
   const { data: prefs } = useQuery({
     queryKey: ['notif-prefs'],
     enabled: !!profile,
-    queryFn: async () => {
+    queryFn: async (): Promise<Tables<'notification_preferences'> | null> => {
       const { data, error } = await supabase
         .from('notification_preferences')
         .select('*')
         .eq('user_id', profile!.id)
         .single()
       if (error) throw error
-      return data
+      return data as unknown as Tables<'notification_preferences'>
     },
   })
 

@@ -1,7 +1,17 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/stores/authStore'
-import type { Enums } from '@/types/database'
+import type { Enums, Tables } from '@/types/database'
+
+type TeamAttendanceRow = {
+  team_id: string | null
+  team_name: string | null
+  user_id: string
+  user_name: string
+  work_date: string | null
+  plan_status: string | null
+  linked_booking_id: string | null
+}
 
 export function useMyAttendance(weekDates: Date[]) {
   const { profile } = useAuth()
@@ -11,7 +21,7 @@ export function useMyAttendance(weekDates: Date[]) {
   return useQuery({
     queryKey: ['attendance', 'mine', from, to],
     enabled: !!profile && !!from,
-    queryFn: async () => {
+    queryFn: async (): Promise<Tables<'attendance_plans'>[]> => {
       const { data, error } = await supabase
         .from('attendance_plans')
         .select('*')
@@ -19,7 +29,7 @@ export function useMyAttendance(weekDates: Date[]) {
         .gte('work_date', from as string)
         .lte('work_date', to as string)
       if (error) throw error
-      return data
+      return (data ?? []) as unknown as Tables<'attendance_plans'>[]
     },
   })
 }
@@ -28,7 +38,7 @@ export function useTeamAttendance(teamId: string | null, from: string, to: strin
   return useQuery({
     queryKey: ['attendance', 'team', teamId, from, to],
     enabled: !!teamId,
-    queryFn: async () => {
+    queryFn: async (): Promise<TeamAttendanceRow[]> => {
       const { data, error } = await supabase
         .from('v_team_attendance')
         .select('*')
@@ -36,7 +46,7 @@ export function useTeamAttendance(teamId: string | null, from: string, to: strin
         .gte('work_date', from)
         .lte('work_date', to)
       if (error) throw error
-      return data
+      return (data ?? []) as unknown as TeamAttendanceRow[]
     },
   })
 }
@@ -50,7 +60,8 @@ export function useUpsertAttendance() {
       linkedBookingId?: string
       notes?: string
     }) => {
-      const { data, error } = await supabase.rpc('fn_upsert_attendance', {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data, error } = await (supabase.rpc as any)('fn_upsert_attendance', {
         p_work_date: params.workDate,
         p_status: params.status,
         p_linked_booking_id: params.linkedBookingId ?? null,

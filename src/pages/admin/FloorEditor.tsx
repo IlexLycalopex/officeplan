@@ -61,7 +61,8 @@ export default function AdminFloorEditor() {
   const publishLayout = useMutation({
     mutationFn: async () => {
       if (!selectedFloorId) return
-      const { error } = await supabase.rpc('publish_floor_layout', { p_floor_id: selectedFloorId })
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { error } = await (supabase.rpc as any)('publish_floor_layout', { p_floor_id: selectedFloorId })
       if (error) throw error
     },
     onSuccess: () => {

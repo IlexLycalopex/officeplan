@@ -4,13 +4,14 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recha
 import { Download } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { isoDateString } from '@/lib/utils'
+import type { Views } from '@/types/database'
 import { format, subDays } from 'date-fns'
 
 function useDailyOccupancy(officeId: string | null, from: string, to: string) {
   return useQuery({
     queryKey: ['report', 'daily-occupancy', officeId, from, to],
     enabled: !!officeId,
-    queryFn: async () => {
+    queryFn: async (): Promise<Views<'v_daily_occupancy'>[]> => {
       let q = supabase
         .from('v_daily_occupancy')
         .select('*')
@@ -20,7 +21,7 @@ function useDailyOccupancy(officeId: string | null, from: string, to: string) {
       if (officeId) q = q.eq('office_id', officeId)
       const { data, error } = await q
       if (error) throw error
-      return data
+      return (data ?? []) as unknown as Views<'v_daily_occupancy'>[]
     },
   })
 }
@@ -28,14 +29,14 @@ function useDailyOccupancy(officeId: string | null, from: string, to: string) {
 function useUtilisation(officeId: string | null) {
   return useQuery({
     queryKey: ['report', 'utilisation', officeId],
-    queryFn: async () => {
+    queryFn: async (): Promise<Views<'v_utilisation'>[]> => {
       const { data, error } = await supabase
         .from('v_utilisation')
         .select('*')
         .order('utilisation_pct_30d', { ascending: false })
         .limit(20)
       if (error) throw error
-      return data
+      return (data ?? []) as unknown as Views<'v_utilisation'>[]
     },
   })
 }
@@ -43,10 +44,10 @@ function useUtilisation(officeId: string | null) {
 function useOfficeList() {
   return useQuery({
     queryKey: ['offices'],
-    queryFn: async () => {
+    queryFn: async (): Promise<Array<{ id: string; name: string }>> => {
       const { data, error } = await supabase.from('offices').select('id, name').eq('active_flag', true)
       if (error) throw error
-      return data
+      return (data ?? []) as unknown as Array<{ id: string; name: string }>
     },
   })
 }

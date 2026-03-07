@@ -23,17 +23,19 @@ const STATUS_LABEL: Record<string, string> = {
   unplanned: '—',
 }
 
+type Team = { id: string; name: string; department_id: string | null }
+
 function useTeams() {
   return useQuery({
     queryKey: ['teams'],
-    queryFn: async () => {
+    queryFn: async (): Promise<Team[]> => {
       const { data, error } = await supabase
         .from('teams')
         .select('id, name, department_id')
         .eq('active_flag', true)
         .order('name')
       if (error) throw error
-      return data
+      return (data ?? []) as unknown as Team[]
     },
   })
 }
