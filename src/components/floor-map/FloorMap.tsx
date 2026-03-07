@@ -214,7 +214,7 @@ export function FloorMap({ floor, assets, bookings = [], selectedAssetId, onAsse
                   onMouseEnter={e => handleMouseEnter(e, asset)}
                   onMouseLeave={() => setTooltip(null)}
                   tabIndex={!readonly && displayStatus === 'available' ? 0 : undefined}
-                  role={!readonly ? 'button' : undefined}
+                  role={!readonly && displayStatus === 'available' ? 'button' : undefined}
                   aria-label={`${asset.code} – ${displayStatus}`}
                   onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') handleAssetClick(asset) }}
                 />
