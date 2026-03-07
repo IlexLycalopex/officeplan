@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { daysUntil, isoDateString, getWeekDates } from '@/lib/utils'
-import { format, addDays } from 'date-fns'
+import { addDays } from 'date-fns'
 
 describe('booking window rules', () => {
   it('self-service window: today is within 14 days', () => {

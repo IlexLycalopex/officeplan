@@ -22,7 +22,7 @@ function statusStyle(s: PlanStatus | undefined): string {
 export default function Rota() {
   const [weekOffset, setWeekOffset] = useState(0)
   const weekDates = getWeekDates(weekOffset)
-  const { data: attendance, isLoading } = useMyAttendance(weekDates)
+  const { data: attendance } = useMyAttendance(weekDates)
   const upsert = useUpsertAttendance()
 
   const workDays = weekDates.slice(0, 5) // Mon–Fri

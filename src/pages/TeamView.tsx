@@ -39,7 +39,7 @@ function useTeams() {
 }
 
 export default function TeamView() {
-  const { profile, isManager } = useAuth()
+  const { profile } = useAuth()
   const { data: teams } = useTeams()
   const [selectedTeamId, setSelectedTeamId] = useState<string | null>(profile?.team_id ?? null)
   const [weekOffset, setWeekOffset] = useState(0)

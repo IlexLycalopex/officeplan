@@ -287,6 +287,7 @@ export type Database = {
           rooms_booked: number
           rooms_total: number
         }
+        Relationships: []
       }
       v_weekly_occupancy: {
         Row: {
@@ -297,6 +298,7 @@ export type Database = {
           room_bookings: number
           unique_attendees: number
         }
+        Relationships: []
       }
       v_team_attendance: {
         Row: {
@@ -308,6 +310,7 @@ export type Database = {
           plan_status: string | null
           linked_booking_id: string | null
         }
+        Relationships: []
       }
       v_utilisation: {
         Row: {
@@ -321,7 +324,11 @@ export type Database = {
           bookings_last_30d: number
           utilisation_pct_30d: number | null
         }
+        Relationships: []
       }
+    }
+    CompositeTypes: {
+      [_ in never]: never
     }
     Functions: {
       fn_create_booking: {

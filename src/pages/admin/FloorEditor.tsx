@@ -1,7 +1,7 @@
-import { useState, useCallback } from 'react'
+import { useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { Plus, Save, Eye } from 'lucide-react'
+import { useMutation } from '@tanstack/react-query'
+import { Plus, Eye } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { useFloorAssetsAdmin, useOffices, useFloor } from '@/hooks/useFloor'
 import { FloorMap } from '@/components/floor-map/FloorMap'
@@ -21,8 +21,6 @@ const ASSET_PALETTE: { type: AssetType; label: string; defaultW: number; default
 export default function AdminFloorEditor() {
   const [searchParams] = useSearchParams()
   const floorId = searchParams.get('floorId')
-  const qc = useQueryClient()
-
   const { data: offices } = useOffices()
   const [selectedFloorId, setSelectedFloorId] = useState<string | null>(floorId)
   const { data: floor } = useFloor(selectedFloorId)
