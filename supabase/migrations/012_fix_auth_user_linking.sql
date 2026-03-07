@@ -3,6 +3,12 @@
 -- pre-seeded public.users row already exists with the same email and
 -- auth_user_id IS NULL. This created a duplicate employee row and left the
 -- admin row unlinked, causing GoTrue to fail on re-login (missing identity).
+--
+-- KEY LESSON: Never manually insert rows into auth.users or auth.identities.
+-- GoTrue v2 requires instance_id = '00000000-0000-0000-0000-000000000000' and
+-- a properly created identity. Manual inserts cause "Database error finding user"
+-- on OTP requests. Instead: reset auth_user_id to NULL and let GoTrue create
+-- the auth user on first login — the trigger will re-link it.
 
 -- Fix 1: Update trigger to UPDATE existing unlinked rows before INSERT
 CREATE OR REPLACE FUNCTION public.handle_new_auth_user()
@@ -42,29 +48,22 @@ $$;
 DELETE FROM public.users
 WHERE id = '9c246999-686b-4fec-a8fb-5cf1bd7b0503';
 
--- Fix 3: Link the admin public.users row to the existing auth.users entry
-UPDATE public.users
-SET auth_user_id = 'cfebd47a-36ae-4699-b5a0-1271ac93f3c2'
-WHERE id = 'cfebd47a-36ae-4699-b5a0-1271ac93f3c2'
-  AND auth_user_id IS NULL;
+-- Fix 3: Delete any manually-created auth records for the admin email so GoTrue
+-- can create them properly on first login (instance_id, identity format, etc.)
+DELETE FROM auth.identities
+WHERE user_id IN (
+  SELECT id FROM auth.users WHERE email = 'alexander.jameswatts@gmail.com'
+) AND last_sign_in_at IS NULL;  -- only delete never-used identities
 
--- Fix 4: Insert the missing auth.identities row so GoTrue can authenticate
--- Without this GoTrue treats the user as "unfinished" and fails on re-login
--- Note: email is a generated column in auth.identities — must be omitted
-INSERT INTO auth.identities (
-  provider_id, user_id, identity_data, provider,
-  created_at, updated_at
-)
-VALUES (
-  'alexander.jameswatts@gmail.com',
-  'cfebd47a-36ae-4699-b5a0-1271ac93f3c2',
-  jsonb_build_object(
-    'sub',            'cfebd47a-36ae-4699-b5a0-1271ac93f3c2',
-    'email',          'alexander.jameswatts@gmail.com',
-    'email_verified', true,
-    'phone_verified', false
-  ),
-  'email',
-  now(), now()
-)
-ON CONFLICT DO NOTHING;
+DELETE FROM auth.users
+WHERE email = 'alexander.jameswatts@gmail.com'
+  AND instance_id IS NULL;  -- only delete manually-inserted rows (GoTrue always sets instance_id)
+
+-- Fix 4: Reset auth_user_id to NULL on the admin public.users row so the trigger
+-- will re-link it when GoTrue creates the auth user on first login.
+UPDATE public.users
+SET auth_user_id = NULL
+WHERE email = 'alexander.jameswatts@gmail.com'
+  AND NOT EXISTS (
+    SELECT 1 FROM auth.users WHERE email = 'alexander.jameswatts@gmail.com'
+  );
