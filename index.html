@@ -12,7 +12,7 @@
         if (l.search[1] === 'p') {
           var params = l.search.slice(1).split('&');
           var path = params[0].split('=')[1].replace(/~and~/g, '&');
-          var query = params[1] ? '?' + params[1].split('=')[1].replace(/~and~/g, '&') : '';
+          var query = params[1] ? '?' + params[1].slice(2).replace(/~and~/g, '&') : '';
           window.history.replaceState(
             null, null,
             l.pathname + path + query + l.hash
