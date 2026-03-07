@@ -1,0 +1,28 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build output
+dist/
+
+# Environment variables (NEVER commit real credentials)
+.env
+.env.local
+.env.production
+
+# Supabase local
+supabase/.branches/
+supabase/.temp/
+
+# Test output
+test-results/
+playwright-report/
+
+# Editor
+.vscode/
+.idea/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db

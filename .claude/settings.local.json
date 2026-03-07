@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ls:*)",
+      "Bash(powershell -File:*)",
+      "Bash(pnpm --version:*)",
+      "Bash(gh:*)",
+      "Bash(npm:*)",
+      "Bash(npx --version)",
+      "Bash(git --version:*)",
+      "Bash(powershell -Command:*)"
+    ]
+  }
+}
