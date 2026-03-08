@@ -53,10 +53,21 @@ export function useFloorBookings(floorId: string | null, date: string) {
     queryKey: ['bookings', 'floor', floorId, date],
     enabled: !!floorId,
     queryFn: async (): Promise<FloorBooking[]> => {
+      // Step 1: get all asset IDs belonging to this floor
+      const { data: floorAssets, error: assetError } = await sb
+        .from('workspace_assets')
+        .select('id')
+        .eq('floor_id', floorId)
+      if (assetError) throw assetError
+
+      const assetIds = (floorAssets ?? []).map((a: { id: string }) => a.id)
+      if (assetIds.length === 0) return []
+
+      // Step 2: fetch confirmed/pending bookings for those assets on the given date
       const { data, error } = await sb
         .from('bookings')
-        .select('asset_id, user_id, status, start_time, end_time, users(first_name, last_name), workspace_assets!inner(floor_id)')
-        .eq('workspace_assets.floor_id', floorId)
+        .select('asset_id, user_id, status, start_time, end_time, users(first_name, last_name)')
+        .in('asset_id', assetIds)
         .eq('booking_date', date)
         .in('status', ['confirmed', 'pending_approval'])
       if (error) throw error
