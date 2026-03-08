@@ -17,7 +17,11 @@
           });
           var path = (kv['p'] || '').replace(/~and~/g, '&');
           var query = kv['q'] ? '?' + kv['q'].replace(/~and~/g, '&') : '';
-          window.history.replaceState(null, null, l.pathname + path + query + l.hash);
+          // Strip any trailing slash from pathname before joining — on GitHub Pages
+          // the 404→index redirect lands at e.g. /officeplan/ (trailing slash), and
+          // path always starts with /auth/callback, so naive concat gives //auth/callback
+          // which breaks React Router's basename matching.
+          window.history.replaceState(null, null, l.pathname.replace(/\/$/, '') + path + query + l.hash);
         }
       }(window.location));
     </script>

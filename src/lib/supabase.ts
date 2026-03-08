@@ -15,5 +15,10 @@ export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
     persistSession: true,
     autoRefreshToken: true,
     detectSessionInUrl: true,
+    // Use PKCE so the server sends ?code= in the query string rather than
+    // #access_token= in the hash. The query string is reliably preserved
+    // through the GitHub Pages 404→index SPA routing redirect, whereas
+    // the hash can be lost or trigger browser bounce-tracking mitigations.
+    flowType: 'pkce',
   },
 })
