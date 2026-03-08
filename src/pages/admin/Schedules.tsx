@@ -29,8 +29,8 @@ const SCHEDULE_LABELS: Record<string, string> = {
 }
 
 const SCHEDULE_DESCRIPTIONS: Record<string, string> = {
-  weekly_digest: 'Summary of the upcoming week's bookings, sent to opted-in users.',
-  daily_digest: 'Morning reminder about today's bookings.',
+  weekly_digest: "Summary of the upcoming week's bookings, sent to opted-in users.",
+  daily_digest: "Morning reminder about today's bookings.",
   approval_alert: 'Notifies approvers of pending requests.',
   booking_confirmation: 'Confirms a booking to the user immediately after creation.',
 }
