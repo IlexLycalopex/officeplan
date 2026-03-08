@@ -48,7 +48,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (session?.user) {
         fetchProfile(session.user.id)
       } else {
-        setState(prev => ({ ...prev, profile: null, loading: false }))
+        // Do NOT set loading:false here. INITIAL_SESSION fires before
+        // initializePromise resolves (i.e. before URL hash tokens are
+        // processed). Setting loading:false prematurely causes ProtectedRoute
+        // to redirect to /sign-in before SIGNED_IN arrives with the real session.
+        // loading:false is set exclusively by getSession().then() (line ~41)
+        // and fetchProfile() (line ~64), both of which run after full init.
+        setState(prev => ({ ...prev, profile: null }))
       }
     })
 
