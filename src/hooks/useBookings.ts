@@ -11,6 +11,8 @@ type FloorBooking = {
   asset_id: string
   user_id: string
   status: string
+  start_time: string | null
+  end_time: string | null
   users: unknown
 }
 
@@ -53,13 +55,13 @@ export function useFloorBookings(floorId: string | null, date: string) {
     queryFn: async (): Promise<FloorBooking[]> => {
       const { data, error } = await sb
         .from('bookings')
-        .select('asset_id, user_id, status, users(first_name, last_name)')
+        .select('asset_id, user_id, status, start_time, end_time, users(first_name, last_name), workspace_assets!inner(floor_id)')
+        .eq('workspace_assets.floor_id', floorId)
         .eq('booking_date', date)
         .in('status', ['confirmed', 'pending_approval'])
       if (error) throw error
       return (data ?? []) as FloorBooking[]
     },
-    staleTime: 30_000,
   })
 }
 

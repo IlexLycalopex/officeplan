@@ -18,6 +18,7 @@ import AdminFloorEditor from '@/pages/admin/FloorEditor'
 import AdminPolicies from '@/pages/admin/Policies'
 import AdminSchedules from '@/pages/admin/Schedules'
 import AdminApprovals from '@/pages/admin/Approvals'
+import AdminOrganisation from '@/pages/admin/Organisation'
 
 export default function App() {
   return (
@@ -43,6 +44,7 @@ export default function App() {
               {/* Admin only */}
               <Route element={<AdminRoute />}>
                 <Route path="/admin/users" element={<AdminUsers />} />
+                <Route path="/admin/organisation" element={<AdminOrganisation />} />
                 <Route path="/admin/offices" element={<AdminOffices />} />
                 <Route path="/admin/floor-editor" element={<AdminFloorEditor />} />
                 <Route path="/admin/policies" element={<AdminPolicies />} />

@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { format, addDays } from 'date-fns'
 import { ChevronLeft, ChevronRight, X } from 'lucide-react'
+import { useSearchParams } from 'react-router-dom'
 import { FloorMap } from '@/components/floor-map/FloorMap'
 import { useOffices, useFloorAssets, useFloor } from '@/hooks/useFloor'
 import { useFloorBookings, useCreateBooking } from '@/hooks/useBookings'
@@ -13,10 +14,17 @@ type Asset = Tables<'workspace_assets'>
 export default function BookDesk() {
   const { profile } = useAuth()
   const { data: offices } = useOffices()
+  const [searchParams] = useSearchParams()
+
+  // Pre-set date from ?date= query param (used by Rota prompt)
+  const paramDate = searchParams.get('date')
+  const initialDate = paramDate
+    ? new Date(paramDate + 'T00:00:00')
+    : new Date()
 
   const [selectedOfficeId, setSelectedOfficeId] = useState<string | null>(null)
   const [selectedFloorId, setSelectedFloorId] = useState<string | null>(null)
-  const [selectedDate, setSelectedDate] = useState<Date>(new Date())
+  const [selectedDate, setSelectedDate] = useState<Date>(initialDate)
   const [selectedAsset, setSelectedAsset] = useState<Asset | null>(null)
   const [notes, setNotes] = useState('')
   const [success, setSuccess] = useState<string | null>(null)

@@ -15,6 +15,7 @@ import {
   Bell,
   UserCog,
   MapPin,
+  Landmark,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/stores/authStore'
@@ -24,7 +25,6 @@ interface NavItem {
   label: string
   to: string
   icon: React.ReactNode
-  adminOnly?: boolean
 }
 
 const navItems: NavItem[] = [
@@ -38,6 +38,7 @@ const navItems: NavItem[] = [
 ]
 
 const adminItems: NavItem[] = [
+  { label: 'Organisation', to: '/admin/organisation', icon: <Landmark size={18} /> },
   { label: 'Users', to: '/admin/users', icon: <UserCog size={18} /> },
   { label: 'Offices & Floors', to: '/admin/offices', icon: <Building2 size={18} /> },
   { label: 'Floor Editor', to: '/admin/floor-editor', icon: <FlipHorizontal size={18} /> },

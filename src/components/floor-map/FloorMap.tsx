@@ -17,6 +17,8 @@ interface Props {
   selectedAssetId?: string | null
   onAssetClick?: (asset: Asset) => void
   readonly?: boolean
+  /** When true, ALL assets are clickable regardless of booking status (used in Floor Editor) */
+  editorMode?: boolean
 }
 
 // Status → fill colour (design tokens from spec)
@@ -68,7 +70,7 @@ interface TooltipState {
   y: number
 }
 
-export function FloorMap({ floor, assets, bookings = [], selectedAssetId, onAssetClick, readonly }: Props) {
+export function FloorMap({ floor, assets, bookings = [], selectedAssetId, onAssetClick, readonly, editorMode }: Props) {
   const [tooltip, setTooltip] = useState<TooltipState | null>(null)
 
   // SVG viewBox — scale from grid units to pixel space
@@ -82,8 +84,14 @@ export function FloorMap({ floor, assets, bookings = [], selectedAssetId, onAsse
 
   function handleAssetClick(asset: Asset) {
     if (readonly) return
+    if (!onAssetClick) return
+    if (editorMode) {
+      // In editor mode, all assets are selectable regardless of booking/status
+      onAssetClick(asset)
+      return
+    }
     const { displayStatus } = resolveAssetStatus(asset, bookings)
-    if (displayStatus === 'available' && onAssetClick) {
+    if (displayStatus === 'available') {
       onAssetClick(asset)
     }
   }
@@ -158,7 +166,7 @@ export function FloorMap({ floor, assets, bookings = [], selectedAssetId, onAsse
                   rx={4}
                   stroke={isSelected ? '#1d4ed8' : fill}
                   strokeWidth={isSelected ? 2.5 : 1.5}
-                  className={cn('desk-asset', !readonly && displayStatus === 'available' && 'cursor-pointer')}
+                  className={cn('desk-asset', !readonly && (editorMode || displayStatus === 'available') && 'cursor-pointer')}
                   onClick={() => handleAssetClick(asset)}
                   onMouseEnter={e => handleMouseEnter(e, asset)}
                   onMouseLeave={() => setTooltip(null)}
@@ -208,13 +216,13 @@ export function FloorMap({ floor, assets, bookings = [], selectedAssetId, onAsse
                   strokeWidth={isSelected ? 2 : 0.5}
                   className={cn(
                     'desk-asset',
-                    !readonly && displayStatus === 'available' && 'cursor-pointer',
+                    !readonly && (editorMode || displayStatus === 'available') && 'cursor-pointer',
                   )}
                   onClick={() => handleAssetClick(asset)}
                   onMouseEnter={e => handleMouseEnter(e, asset)}
                   onMouseLeave={() => setTooltip(null)}
-                  tabIndex={!readonly && displayStatus === 'available' ? 0 : undefined}
-                  role={!readonly && displayStatus === 'available' ? 'button' : undefined}
+                  tabIndex={!readonly && (editorMode || displayStatus === 'available') ? 0 : undefined}
+                  role={!readonly && (editorMode || displayStatus === 'available') ? 'button' : undefined}
                   aria-label={`${asset.code} – ${displayStatus}`}
                   onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') handleAssetClick(asset) }}
                 />

@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import type { Tables } from '@/types/database'
 import { supabase } from '@/lib/supabase'
 import { format } from 'date-fns'
+import { CronBuilder } from '@/components/CronBuilder'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const sb = supabase as any
@@ -25,6 +26,13 @@ const SCHEDULE_LABELS: Record<string, string> = {
   daily_digest: 'Daily Digest',
   approval_alert: 'Approval Alert',
   booking_confirmation: 'Booking Confirmation',
+}
+
+const SCHEDULE_DESCRIPTIONS: Record<string, string> = {
+  weekly_digest: 'Summary of the upcoming week's bookings, sent to opted-in users.',
+  daily_digest: 'Morning reminder about today's bookings.',
+  approval_alert: 'Notifies approvers of pending requests.',
+  booking_confirmation: 'Confirms a booking to the user immediately after creation.',
 }
 
 export default function AdminSchedules() {
@@ -57,19 +65,22 @@ export default function AdminSchedules() {
     <div className="max-w-3xl space-y-4">
       <h1 className="text-xl font-semibold text-gray-900">Notification Schedules</h1>
       <p className="text-sm text-gray-500">
-        Schedules are executed by Supabase Cron. Cron expressions follow standard 5-field syntax (minute hour day-of-month month day-of-week).
+        Configure when automated notifications are sent. Schedules are executed by Supabase Cron.
       </p>
 
       {isLoading && <p className="text-sm text-gray-500">Loading…</p>}
 
-      <div className="space-y-3">
+      <div className="space-y-4">
         {schedules?.map(s => (
           <div key={s.id} className="rounded-xl border border-gray-200 bg-white p-5">
-            <div className="flex items-start justify-between gap-4">
+            <div className="flex items-start justify-between gap-4 mb-4">
               <div>
                 <p className="font-medium text-gray-900">{SCHEDULE_LABELS[s.schedule_type] ?? s.schedule_type}</p>
+                <p className="text-xs text-gray-400 mt-0.5">
+                  {SCHEDULE_DESCRIPTIONS[s.schedule_type]}
+                </p>
                 {s.last_run_at && (
-                  <p className="text-xs text-gray-400 mt-0.5">
+                  <p className="text-xs text-gray-400 mt-1">
                     Last run: {format(new Date(s.last_run_at), 'd MMM yyyy HH:mm')}
                     {s.last_run_status && (
                       <span className={`ml-2 ${s.last_run_status === 'ok' ? 'text-green-600' : 'text-red-500'}`}>
@@ -96,22 +107,11 @@ export default function AdminSchedules() {
               </label>
             </div>
 
-            {/* Cron expression editor */}
-            <div className="mt-3 flex items-center gap-2">
-              <code className="text-xs text-gray-500">cron:</code>
-              <input
-                defaultValue={s.cron_expression}
-                onBlur={e => {
-                  if (e.target.value !== s.cron_expression) {
-                    updateCron.mutate({ id: s.id, cron: e.target.value })
-                  }
-                }}
-                className="flex-1 rounded-lg border border-gray-300 px-3 py-1.5 font-mono text-sm"
-              />
-            </div>
-            <p className="mt-1 text-xs text-gray-400">
-              Example: <code>0 8 * * 1</code> = Monday 8am · <code>0 7 * * 1-5</code> = weekdays 7am
-            </p>
+            {/* Visual cron builder */}
+            <CronBuilder
+              value={s.cron_expression}
+              onChange={cron => updateCron.mutate({ id: s.id, cron })}
+            />
           </div>
         ))}
       </div>

@@ -2,6 +2,7 @@ import { useState, useEffect, type FormEvent } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/stores/authStore'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useTeams } from '@/hooks/useOrganisation'
 import type { Tables } from '@/types/database'
 
 const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
@@ -9,13 +10,18 @@ const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 export default function Profile() {
   const { profile, user } = useAuth()
   const qc = useQueryClient()
+  const { data: teams } = useTeams()
 
   const [firstName, setFirstName] = useState(profile?.first_name ?? '')
   const [lastName, setLastName] = useState(profile?.last_name ?? '')
   const [jobTitle, setJobTitle] = useState(profile?.job_title ?? '')
+  const [teamId, setTeamId] = useState<string>('')
   const [workingDays, setWorkingDays] = useState<number[]>(profile?.normal_working_days ?? [1,2,3,4,5])
   const [officeDays, setOfficeDays] = useState<number[]>(profile?.normal_office_days ?? [1,3])
   const [saved, setSaved] = useState(false)
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const sb = supabase as any
 
   useEffect(() => {
     if (profile) {
@@ -24,12 +30,18 @@ export default function Profile() {
       setJobTitle(profile.job_title ?? '')
       setWorkingDays(profile.normal_working_days)
       setOfficeDays(profile.normal_office_days)
+      // team_id may not be in the cached profile type — fetch separately
+      sb.from('users')
+        .select('team_id')
+        .eq('id', profile.id)
+        .single()
+        .then(({ data }: { data: { team_id: string | null } | null }) => {
+          if (data?.team_id) setTeamId(data.team_id)
+        })
     }
-  }, [profile])
+  }, [profile]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Notification preferences
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const sb = supabase as any
   const { data: prefs } = useQuery({
     queryKey: ['notif-prefs'],
     enabled: !!profile,
@@ -58,8 +70,14 @@ export default function Profile() {
       if (!profile) return
       const { error } = await sb
         .from('users')
-        .update({ first_name: firstName, last_name: lastName, job_title: jobTitle,
-                  normal_working_days: workingDays, normal_office_days: officeDays })
+        .update({
+          first_name: firstName,
+          last_name: lastName,
+          job_title: jobTitle,
+          normal_working_days: workingDays,
+          normal_office_days: officeDays,
+          team_id: teamId || null,
+        })
         .eq('id', profile.id)
       if (error) throw error
 
@@ -122,6 +140,19 @@ export default function Profile() {
               <span className="text-xs font-medium text-gray-600">Email</span>
               <p className="mt-1 text-sm text-gray-500">{user?.email}</p>
             </div>
+            <label className="block sm:col-span-2">
+              <span className="text-xs font-medium text-gray-600">Team</span>
+              <select
+                value={teamId}
+                onChange={e => setTeamId(e.target.value)}
+                className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
+              >
+                <option value="">No team</option>
+                {(teams ?? []).map(t => (
+                  <option key={t.id} value={t.id}>{t.name}</option>
+                ))}
+              </select>
+            </label>
           </div>
         </section>
 

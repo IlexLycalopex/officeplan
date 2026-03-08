@@ -1,7 +1,9 @@
 import { useState } from 'react'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { format } from 'date-fns'
+import { useNavigate } from 'react-router-dom'
 import { useMyAttendance, useUpsertAttendance } from '@/hooks/useRota'
+import { useMyBookings } from '@/hooks/useBookings'
 import { getWeekDates, isoDateString } from '@/lib/utils'
 import type { Enums } from '@/types/database'
 
@@ -21,9 +23,18 @@ function statusStyle(s: PlanStatus | undefined): string {
 
 export default function Rota() {
   const [weekOffset, setWeekOffset] = useState(0)
+  const navigate = useNavigate()
   const weekDates = getWeekDates(weekOffset)
   const { data: attendance } = useMyAttendance(weekDates)
   const upsert = useUpsertAttendance()
+
+  // Load bookings for the visible week to check if desks are already booked
+  const weekStart = isoDateString(weekDates[0])
+  const weekEnd = isoDateString(weekDates[4])
+  const { data: myBookings } = useMyBookings(weekStart, weekEnd)
+
+  // Prompt state: { dateStr } — show after switching to in_office with no desk booked
+  const [bookPromptDate, setBookPromptDate] = useState<string | null>(null)
 
   const workDays = weekDates.slice(0, 5) // Mon–Fri
 
@@ -37,6 +48,23 @@ export default function Rota() {
     const idx = STATUS_OPTIONS.findIndex(o => o.value === current)
     const next = STATUS_OPTIONS[(idx + 1) % STATUS_OPTIONS.length]
     await upsert.mutateAsync({ workDate: isoDateString(date), status: next.value })
+
+    // After switching to in_office, check if a desk is already booked that day
+    if (next.value === 'in_office') {
+      const ds = isoDateString(date)
+      const hasDesk = (myBookings ?? []).some(
+        b =>
+          b.booking_date === ds &&
+          ['confirmed', 'pending_approval'].includes(b.status) &&
+          (b.workspace_assets as { asset_type?: string } | null)?.asset_type === 'desk',
+      )
+      if (!hasDesk) {
+        setBookPromptDate(ds)
+      }
+    } else {
+      // Dismiss prompt if user changes status away from in_office
+      setBookPromptDate(null)
+    }
   }
 
   return (
@@ -91,6 +119,30 @@ export default function Rota() {
           })}
         </div>
       </div>
+
+      {/* Desk booking prompt */}
+      {bookPromptDate && (
+        <div className="rounded-xl border border-blue-200 bg-blue-50 p-4">
+          <p className="text-sm font-medium text-blue-900">
+            You haven't booked a desk for{' '}
+            <strong>{format(new Date(bookPromptDate + 'T00:00:00'), 'EEEE, d MMM')}</strong>.
+          </p>
+          <div className="mt-3 flex gap-2">
+            <button
+              onClick={() => navigate(`/book?date=${bookPromptDate}`)}
+              className="rounded-lg bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700"
+            >
+              Book a desk →
+            </button>
+            <button
+              onClick={() => setBookPromptDate(null)}
+              className="rounded-lg border border-blue-300 px-3 py-1.5 text-sm text-blue-700 hover:bg-blue-100"
+            >
+              Dismiss
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Legend */}
       <div className="flex flex-wrap gap-3">
