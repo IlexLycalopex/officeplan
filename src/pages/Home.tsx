@@ -1,12 +1,14 @@
 import { useNavigate } from 'react-router-dom'
-import { CalendarDays, Users, Clock, CheckSquare, Building2, DoorOpen } from 'lucide-react'
-import { addDays } from 'date-fns'
+import { CalendarDays, Users, Clock, CheckSquare, Building2, DoorOpen, ClipboardList, CalendarRange, AlertCircle } from 'lucide-react'
+import { addDays, format } from 'date-fns'
 import { useAuth } from '@/stores/authStore'
 import { useMyBookings } from '@/hooks/useBookings'
 import { useMyAttendance } from '@/hooks/useRota'
 import { usePendingApprovals } from '@/hooks/useApprovals'
+import { useMyWeekTimesheets, TIMESHEET_STATUS_COLOURS, TIMESHEET_STATUS_LABELS } from '@/hooks/useTimesheets'
+import { useMyRotaShifts } from '@/hooks/useRotaShifts'
 import { formatDate, getWeekDates, isoDateString } from '@/lib/utils'
-import { format } from 'date-fns'
+import { getWeekStart, formatTime, formatMinutes, timeDiffMinutes, toISODate } from '@/lib/dateUtils'
 
 export default function Home() {
   const { profile, isAdmin } = useAuth()
@@ -16,16 +18,35 @@ export default function Home() {
   const weekEnd = isoDateString(weekDates[6])
   const thirtyDaysOut = isoDateString(addDays(new Date(), 30))
 
-  // Week view for the "This week" card
+  // Existing data
   const { data: weekBookings } = useMyBookings(today, weekEnd)
-  // Wider 30-day window for "Upcoming" and "Today" cards
   const { data: upcomingBookings } = useMyBookings(today, thirtyDaysOut)
   const { data: attendance } = useMyAttendance(weekDates)
   const { data: pendingApprovals } = usePendingApprovals()
 
-  // Today: may have multiple bookings (desk + room)
+  // New: timesheets + rota shifts this week
+  const weekStartDate = getWeekStart(new Date())
+  const { data: weekTimesheets = [] } = useMyWeekTimesheets(weekStartDate)
+  const { data: rotaShifts = [] } = useMyRotaShifts(weekStartDate)
+
   const todayBookings = (upcomingBookings ?? []).filter(b => b.booking_date === today)
   const pendingCount = pendingApprovals?.length ?? 0
+
+  // Timesheet summary for this week
+  const approvedSheets = weekTimesheets.filter(t => t.status === 'approved')
+  const pendingSheets = weekTimesheets.filter(t => t.status === 'submitted')
+  const draftSheets = weekTimesheets.filter(t => t.status === 'draft')
+  const totalApprovedMins = approvedSheets.reduce(
+    (sum, t) => sum + Math.max(0, timeDiffMinutes(t.start_time, t.end_time) - t.break_duration_minutes),
+    0,
+  )
+
+  // Today's and next upcoming rota shift
+  const todayShift = rotaShifts.find(s => s.shift_date === today)
+  const nextShift = rotaShifts.find(s => s.shift_date > today)
+  const unacknowledgedCount = rotaShifts.filter(
+    s => s.status === 'confirmed' && s.rota_shift_acknowledgements.length === 0,
+  ).length
 
   return (
     <div className="max-w-5xl space-y-6">
@@ -58,6 +79,14 @@ export default function Home() {
           label="My rota"
           onClick={() => navigate('/rota')}
           color="purple"
+          badge={unacknowledgedCount > 0 ? unacknowledgedCount : undefined}
+        />
+        <QuickAction
+          icon={<ClipboardList size={20} />}
+          label="Timesheets"
+          onClick={() => navigate('/timesheets')}
+          color="emerald"
+          badge={draftSheets.length > 0 ? draftSheets.length : undefined}
         />
         <QuickAction
           icon={<Users size={20} />}
@@ -172,6 +201,101 @@ export default function Home() {
             <p className="text-sm text-gray-500">No upcoming bookings.</p>
           )}
         </StatusCard>
+
+        {/* This week's timesheets */}
+        <StatusCard title="Timesheets this week" icon={<ClipboardList size={16} />}>
+          {weekTimesheets.length === 0 ? (
+            <div className="text-sm text-gray-500">
+              <p>No timesheets logged yet.</p>
+              <button
+                onClick={() => navigate('/timesheets')}
+                className="mt-2 text-emerald-600 hover:underline"
+              >
+                Log your shifts →
+              </button>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {/* Hours approved */}
+              {totalApprovedMins > 0 && (
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-gray-500">Approved hours</span>
+                  <span className="font-semibold text-gray-900">{formatMinutes(totalApprovedMins)}</span>
+                </div>
+              )}
+              {/* Status breakdown */}
+              <div className="flex flex-wrap gap-1.5 pt-1">
+                {weekTimesheets.map(t => (
+                  <span
+                    key={t.id}
+                    className={`rounded-full px-2 py-0.5 text-xs font-medium ${TIMESHEET_STATUS_COLOURS[t.status]}`}
+                    title={format(new Date(t.shift_date + 'T00:00:00'), 'EEE d MMM')}
+                  >
+                    {format(new Date(t.shift_date + 'T00:00:00'), 'EEE')} · {TIMESHEET_STATUS_LABELS[t.status]}
+                  </span>
+                ))}
+              </div>
+              {pendingSheets.length > 0 && (
+                <p className="text-xs text-amber-600">{pendingSheets.length} awaiting approval</p>
+              )}
+              <button
+                onClick={() => navigate('/timesheets')}
+                className="mt-1 text-xs text-emerald-600 hover:underline"
+              >
+                View all →
+              </button>
+            </div>
+          )}
+        </StatusCard>
+
+        {/* This week's shifts from rota */}
+        <StatusCard title="Scheduled shifts" icon={<CalendarRange size={16} />}>
+          {rotaShifts.length === 0 ? (
+            <p className="text-sm text-gray-500">No shifts scheduled this week.</p>
+          ) : (
+            <div className="space-y-2">
+              {unacknowledgedCount > 0 && (
+                <div className="flex items-center gap-1.5 rounded-lg bg-amber-50 px-2 py-1.5 text-xs text-amber-700">
+                  <AlertCircle size={12} />
+                  {unacknowledgedCount} shift{unacknowledgedCount !== 1 ? 's' : ''} need acknowledging
+                </div>
+              )}
+              {/* Show today's shift prominently, then next one */}
+              {todayShift ? (
+                <div className="rounded-lg bg-emerald-50 px-3 py-2">
+                  <p className="text-xs font-semibold text-emerald-700 mb-0.5">Today</p>
+                  <p className="text-sm font-medium text-gray-900">
+                    {formatTime(todayShift.start_time)} – {formatTime(todayShift.end_time)}
+                  </p>
+                  {todayShift.offices && (
+                    <p className="text-xs text-gray-500">{todayShift.offices.name}</p>
+                  )}
+                </div>
+              ) : nextShift ? (
+                <div className="rounded-lg bg-gray-50 px-3 py-2">
+                  <p className="text-xs font-semibold text-gray-500 mb-0.5">
+                    {format(new Date(nextShift.shift_date + 'T00:00:00'), 'EEEE d MMM')}
+                  </p>
+                  <p className="text-sm font-medium text-gray-900">
+                    {formatTime(nextShift.start_time)} – {formatTime(nextShift.end_time)}
+                  </p>
+                  {nextShift.offices && (
+                    <p className="text-xs text-gray-500">{nextShift.offices.name}</p>
+                  )}
+                </div>
+              ) : null}
+              <p className="text-xs text-gray-400">
+                {rotaShifts.length} shift{rotaShifts.length !== 1 ? 's' : ''} this week
+              </p>
+              <button
+                onClick={() => navigate('/rota')}
+                className="text-xs text-emerald-600 hover:underline"
+              >
+                View rota →
+              </button>
+            </div>
+          )}
+        </StatusCard>
       </div>
     </div>
   )
@@ -190,7 +314,7 @@ function QuickAction({
   icon: React.ReactNode
   label: string
   onClick: () => void
-  color: 'blue' | 'indigo' | 'purple' | 'green' | 'amber'
+  color: 'blue' | 'indigo' | 'purple' | 'green' | 'amber' | 'emerald'
   badge?: number
 }) {
   const colours = {
@@ -199,6 +323,7 @@ function QuickAction({
     purple: 'bg-purple-50 text-purple-700 hover:bg-purple-100',
     green: 'bg-green-50 text-green-700 hover:bg-green-100',
     amber: 'bg-amber-50 text-amber-700 hover:bg-amber-100',
+    emerald: 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100',
   }
   return (
     <button

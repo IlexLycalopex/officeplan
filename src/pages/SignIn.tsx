@@ -30,12 +30,12 @@ export default function SignIn() {
     <div className="flex min-h-screen items-center justify-center bg-gray-50">
       <div className="w-full max-w-sm rounded-xl border border-gray-200 bg-white p-8 shadow-sm">
         <div className="mb-6 flex flex-col items-center gap-2">
-          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-600">
+          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-600">
             <MapPin className="text-white" size={24} />
           </div>
-          <h1 className="text-xl font-semibold text-gray-900">OfficePlan</h1>
+          <h1 className="text-xl font-semibold text-gray-900">Locustworks</h1>
           <p className="text-center text-sm text-gray-500">
-            Desk, rota and room management
+            Desk, rota, timesheets and room management
           </p>
         </div>
 
@@ -70,7 +70,7 @@ export default function SignIn() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50"
+              className="w-full rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 disabled:opacity-50"
             >
               {loading ? 'Sending…' : 'Send sign-in link'}
             </button>

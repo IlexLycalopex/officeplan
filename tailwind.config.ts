@@ -1,10 +1,16 @@
 import type { Config } from 'tailwindcss'
+import path from 'path'
+
+// Use __dirname so content paths resolve correctly regardless of what directory
+// Vite / PostCSS is launched from. Convert to forward slashes for Tailwind's
+// glob engine (required on Windows).
+const root = __dirname.replace(/\\/g, '/')
 
 export default {
   darkMode: ['class'],
   content: [
-    './index.html',
-    './src/**/*.{ts,tsx}',
+    `${root}/index.html`,
+    `${root}/src/**/*.{ts,tsx}`,
   ],
   theme: {
     extend: {

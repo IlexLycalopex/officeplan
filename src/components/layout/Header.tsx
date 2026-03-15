@@ -25,7 +25,7 @@ export function Header({ onMenuClick }: Props) {
         >
           <Menu size={20} />
         </button>
-        <span className="text-sm text-gray-500">
+        <span className="hidden text-sm text-gray-500 sm:block">
           {format(new Date(), 'EEEE, d MMMM yyyy')}
         </span>
       </div>
@@ -39,10 +39,11 @@ export function Header({ onMenuClick }: Props) {
         </button>
         <button
           onClick={handleSignOut}
-          className="flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-100"
+          className="flex items-center gap-1.5 rounded-md px-2 py-1.5 text-sm text-gray-600 hover:bg-gray-100 sm:px-3"
+          aria-label="Sign out"
         >
           <LogOut size={16} />
-          Sign out
+          <span className="hidden sm:inline">Sign out</span>
         </button>
       </div>
     </header>

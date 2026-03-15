@@ -1,5 +1,5 @@
 // Auto-generated from Supabase schema + manual extensions
-// Run: supabase gen types typescript --project-id <id> > src/types/database.ts
+// Project: locustworks (vqgppnpggwlbtarqqnhg)
 
 export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[]
 
@@ -66,6 +66,14 @@ export type Database = {
           primary_office_id: string | null
           normal_working_days: number[]
           normal_office_days: number[]
+          /** Weekly contracted hours for rota adherence reporting. null = not set. */
+          contracted_hours_per_week: number | null
+          /** Opt-in to email notifications for rota shifts */
+          notify_email: boolean
+          /** Opt-in to SMS notifications. Requires phone to be set. */
+          notify_sms: boolean
+          /** Mobile number for SMS, E.164 format e.g. +447700900000 */
+          phone: string | null
           created_at: string
           updated_at: string
         }
@@ -261,6 +269,34 @@ export type Database = {
         Update: Partial<Database['public']['Tables']['notification_schedules']['Insert']>
         Relationships: []
       }
+      policies: {
+        Row: {
+          id: string
+          organisation_id: string
+          self_book_window_days: number
+          max_booking_window_days: number
+          cancellation_cutoff_hours: number
+          working_days: number[]
+          created_at: string
+          updated_at: string
+        }
+        Insert: Omit<Database['public']['Tables']['policies']['Row'], 'id' | 'created_at' | 'updated_at'>
+        Update: Partial<Database['public']['Tables']['policies']['Insert']>
+        Relationships: []
+      }
+      closed_dates: {
+        Row: {
+          id: string
+          organisation_id: string
+          office_id: string | null
+          close_date: string
+          reason: string | null
+          created_at: string
+        }
+        Insert: Omit<Database['public']['Tables']['closed_dates']['Row'], 'id' | 'created_at'>
+        Update: Partial<Database['public']['Tables']['closed_dates']['Insert']>
+        Relationships: []
+      }
       audit_events: {
         Row: {
           id: string
@@ -273,6 +309,204 @@ export type Database = {
         }
         Insert: Omit<Database['public']['Tables']['audit_events']['Row'], 'id' | 'event_time'>
         Update: Partial<Database['public']['Tables']['audit_events']['Insert']>
+        Relationships: []
+      }
+      // ── New tables (Locustworks) ───────────────────────────────────────────────
+      break_rules: {
+        Row: {
+          id: string
+          organisation_id: string
+          name: string
+          /** Hours of work before a break is required */
+          trigger_hours: number
+          /** Minimum break duration in minutes */
+          break_duration_minutes: number
+          /** Only one default per org (partial unique index) */
+          is_default: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: Omit<Database['public']['Tables']['break_rules']['Row'], 'id' | 'created_at' | 'updated_at'>
+        Update: Partial<Database['public']['Tables']['break_rules']['Insert']>
+        Relationships: [
+          {
+            foreignKeyName: 'break_rules_organisation_id_fkey'
+            columns: ['organisation_id']
+            isOneToOne: false
+            referencedRelation: 'organisations'
+            referencedColumns: ['id']
+          }
+        ]
+      }
+      timesheets: {
+        Row: {
+          id: string
+          organisation_id: string
+          staff_id: string
+          shift_date: string
+          start_time: string
+          end_time: string
+          location_id: string | null
+          break_duration_minutes: number
+          break_compliant: boolean
+          status: 'draft' | 'submitted' | 'approved' | 'rejected' | 'amended'
+          submitted_at: string | null
+          approved_at: string | null
+          approved_by: string | null
+          rejected_at: string | null
+          rejected_by: string | null
+          rejection_reason: string | null
+          deleted_at: string | null
+          deleted_by: string | null
+          notes: string | null
+          rota_shift_id: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: Omit<Database['public']['Tables']['timesheets']['Row'], 'id' | 'created_at' | 'updated_at'>
+        Update: Partial<Database['public']['Tables']['timesheets']['Insert']>
+        Relationships: [
+          {
+            foreignKeyName: 'timesheets_organisation_id_fkey'
+            columns: ['organisation_id']
+            isOneToOne: false
+            referencedRelation: 'organisations'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'timesheets_staff_id_fkey'
+            columns: ['staff_id']
+            isOneToOne: false
+            referencedRelation: 'users'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'timesheets_location_id_fkey'
+            columns: ['location_id']
+            isOneToOne: false
+            referencedRelation: 'offices'
+            referencedColumns: ['id']
+          }
+        ]
+      }
+      shift_amendments: {
+        Row: {
+          id: string
+          timesheet_id: string
+          organisation_id: string
+          amended_by: string
+          amendment_type: 'correction' | 'late_entry' | 'manager_edit' | 'rejection'
+          reason: string
+          previous_values: Json
+          new_values: Json
+          created_at: string
+        }
+        Insert: Omit<Database['public']['Tables']['shift_amendments']['Row'], 'id' | 'created_at'>
+        Update: Partial<Database['public']['Tables']['shift_amendments']['Insert']>
+        Relationships: [
+          {
+            foreignKeyName: 'shift_amendments_timesheet_id_fkey'
+            columns: ['timesheet_id']
+            isOneToOne: false
+            referencedRelation: 'timesheets'
+            referencedColumns: ['id']
+          }
+        ]
+      }
+      rota_weeks: {
+        Row: {
+          id: string
+          organisation_id: string
+          /** Must be a Monday */
+          week_start: string
+          locked_at: string | null
+          locked_by: string | null
+          created_at: string
+        }
+        Insert: Omit<Database['public']['Tables']['rota_weeks']['Row'], 'id' | 'created_at'>
+        Update: Partial<Database['public']['Tables']['rota_weeks']['Insert']>
+        Relationships: []
+      }
+      rota_shifts: {
+        Row: {
+          id: string
+          organisation_id: string
+          staff_id: string
+          location_id: string | null
+          shift_date: string
+          start_time: string
+          end_time: string
+          break_mins: number
+          notes: string | null
+          status: 'draft' | 'tentative' | 'confirmed' | 'cancelled'
+          published_at: string | null
+          published_by: string | null
+          recurring_pattern_id: string | null
+          cancellation_reason: string | null
+          created_by: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: Omit<Database['public']['Tables']['rota_shifts']['Row'], 'id' | 'created_at' | 'updated_at'>
+        Update: Partial<Database['public']['Tables']['rota_shifts']['Insert']>
+        Relationships: [
+          {
+            foreignKeyName: 'rota_shifts_organisation_id_fkey'
+            columns: ['organisation_id']
+            isOneToOne: false
+            referencedRelation: 'organisations'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'rota_shifts_staff_id_fkey'
+            columns: ['staff_id']
+            isOneToOne: false
+            referencedRelation: 'users'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'rota_shifts_location_id_fkey'
+            columns: ['location_id']
+            isOneToOne: false
+            referencedRelation: 'offices'
+            referencedColumns: ['id']
+          }
+        ]
+      }
+      rota_shift_acknowledgements: {
+        Row: {
+          id: string
+          rota_shift_id: string
+          staff_id: string
+          acknowledged_at: string
+          shift_status_at_ack: 'draft' | 'tentative' | 'confirmed' | 'cancelled'
+        }
+        Insert: Omit<Database['public']['Tables']['rota_shift_acknowledgements']['Row'], 'id'>
+        Update: Partial<Database['public']['Tables']['rota_shift_acknowledgements']['Insert']>
+        Relationships: [
+          {
+            foreignKeyName: 'rota_shift_acknowledgements_rota_shift_id_fkey'
+            columns: ['rota_shift_id']
+            isOneToOne: false
+            referencedRelation: 'rota_shifts'
+            referencedColumns: ['id']
+          }
+        ]
+      }
+      staff_unavailability: {
+        Row: {
+          id: string
+          organisation_id: string
+          staff_id: string
+          unavailability_type: 'holiday' | 'sick' | 'personal' | 'unavailable'
+          start_date: string
+          end_date: string
+          notes: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: Omit<Database['public']['Tables']['staff_unavailability']['Row'], 'id' | 'created_at' | 'updated_at'>
+        Update: Partial<Database['public']['Tables']['staff_unavailability']['Insert']>
         Relationships: []
       }
     }
@@ -376,6 +610,11 @@ export type Database = {
       approval_status: 'pending' | 'approved' | 'rejected' | 'withdrawn'
       request_type: 'advance_booking' | 'restricted_asset' | 'exception'
       schedule_type: 'weekly_digest' | 'daily_digest' | 'approval_alert' | 'booking_confirmation'
+      // New enums
+      timesheet_status: 'draft' | 'submitted' | 'approved' | 'rejected' | 'amended'
+      amendment_type: 'correction' | 'late_entry' | 'manager_edit' | 'rejection'
+      rota_shift_status: 'draft' | 'tentative' | 'confirmed' | 'cancelled'
+      unavailability_type: 'holiday' | 'sick' | 'personal' | 'unavailable'
     }
   }
 }

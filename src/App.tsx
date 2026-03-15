@@ -12,6 +12,7 @@ import Rooms from '@/pages/Rooms'
 import TeamView from '@/pages/TeamView'
 import Reports from '@/pages/Reports'
 import Profile from '@/pages/Profile'
+import MyTimesheets from '@/pages/timesheets/MyTimesheets'
 import AdminUsers from '@/pages/admin/Users'
 import AdminOffices from '@/pages/admin/Offices'
 import AdminFloorEditor from '@/pages/admin/FloorEditor'
@@ -19,6 +20,8 @@ import AdminPolicies from '@/pages/admin/Policies'
 import AdminSchedules from '@/pages/admin/Schedules'
 import AdminApprovals from '@/pages/admin/Approvals'
 import AdminOrganisation from '@/pages/admin/Organisation'
+import TimesheetApprovals from '@/pages/admin/TimesheetApprovals'
+import RotaBuilder from '@/pages/admin/RotaBuilder'
 
 export default function App() {
   return (
@@ -40,6 +43,7 @@ export default function App() {
               <Route path="/team" element={<TeamView />} />
               <Route path="/reports" element={<Reports />} />
               <Route path="/profile" element={<Profile />} />
+              <Route path="/timesheets" element={<MyTimesheets />} />
 
               {/* Admin only */}
               <Route element={<AdminRoute />}>
@@ -50,6 +54,8 @@ export default function App() {
                 <Route path="/admin/policies" element={<AdminPolicies />} />
                 <Route path="/admin/schedules" element={<AdminSchedules />} />
                 <Route path="/admin/approvals" element={<AdminApprovals />} />
+                <Route path="/admin/timesheet-approvals" element={<TimesheetApprovals />} />
+                <Route path="/admin/rota" element={<RotaBuilder />} />
               </Route>
             </Route>
           </Route>

@@ -26,3 +26,15 @@ playwright-report/
 # OS
 .DS_Store
 Thumbs.db
+
+# TypeScript build cache
+*.tsbuildinfo
+
+# Claude Code local config
+.claude/
+
+# Windows null device artifact
+nul
+
+# Local helper scripts
+*.ps1
