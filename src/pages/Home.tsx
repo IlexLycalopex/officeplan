@@ -8,7 +8,7 @@ import { usePendingApprovals } from '@/hooks/useApprovals'
 import { useMyWeekTimesheets, TIMESHEET_STATUS_COLOURS, TIMESHEET_STATUS_LABELS } from '@/hooks/useTimesheets'
 import { useMyRotaShifts } from '@/hooks/useRotaShifts'
 import { formatDate, getWeekDates, isoDateString } from '@/lib/utils'
-import { getWeekStart, formatTime, formatMinutes, timeDiffMinutes, toISODate } from '@/lib/dateUtils'
+import { getWeekStart, formatTime, formatMinutes, timeDiffMinutes } from '@/lib/dateUtils'
 
 export default function Home() {
   const { profile, isAdmin } = useAuth()

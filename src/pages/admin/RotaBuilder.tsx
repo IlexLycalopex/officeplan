@@ -9,7 +9,6 @@ import {
   MapPin,
   AlertCircle,
 } from 'lucide-react'
-import { useAuth } from '@/stores/authStore'
 import { getWeekStart, getWeekDays, toISODate, formatWeekRange, formatTime, timeDiffMinutes, formatMinutes } from '@/lib/dateUtils'
 import {
   useWeekRotaShifts,
@@ -247,7 +246,6 @@ function ShiftChip({ shift, onClick, onCancel }: ShiftChipProps) {
 // ── Main component ────────────────────────────────────────────────────────────
 
 export default function RotaBuilder() {
-  const { profile } = useAuth()
   const [weekOffset, setWeekOffset] = useState(0)
   const today = new Date()
   const baseMonday = getWeekStart(today)
