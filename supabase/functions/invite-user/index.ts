@@ -2,7 +2,7 @@ import "jsr:@supabase/functions-js/edge-runtime.d.ts"
 import { createClient } from "jsr:@supabase/supabase-js@2"
 
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") ?? ""
-const RESEND_FROM    = Deno.env.get("RESEND_FROM_EMAIL") ?? "noreply@officeplan.app"
+const RESEND_FROM    = Deno.env.get("RESEND_FROM_EMAIL") ?? "noreply@locustworks.app"
 
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
@@ -39,10 +39,10 @@ Deno.serve(async (req: Request) => {
         body: JSON.stringify({
           from: RESEND_FROM,
           to: [email],
-          subject: "You've been invited to OfficePlan",
+          subject: "You've been invited to Locustworks",
           html: `
             <p>Hi there,</p>
-            <p>You've been invited to join <strong>OfficePlan</strong> — your team's workplace booking platform.</p>
+            <p>You've been invited to join <strong>Locustworks</strong> — your team's workplace management platform.</p>
             <p>Click the button below to accept your invitation and set up your account:</p>
             <p style="margin: 24px 0;">
               <a href="${magicLink}" style="background:#2563eb;color:white;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;">

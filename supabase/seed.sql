@@ -1,4 +1,4 @@
--- Seed data for OfficePlan pilot
+-- Seed data for Locustworks pilot
 -- Run AFTER all migrations
 -- Creates: 1 org, 3 departments, 6 teams, sample offices/floors/assets
 -- User accounts are created via auth (email sign-in); this seeds the reference data

@@ -1,8 +1,8 @@
-# OfficePlan
+# Locustworks
 
-> Desk, rota and room management for the modern workplace.
+> Desk, rota, timesheets and room management for the modern workplace.
 
-A browser-based office seating and workplace management application built for an initial internal pilot (phase 1) with a clear path to commercial multi-tenant SaaS (phase 2).
+A browser-based workplace management application covering desk booking, shift rotas, timesheet approval and room management. Built for an internal pilot with a clear path to commercial multi-tenant SaaS.
 
 ## Architecture
 
@@ -15,19 +15,19 @@ A browser-based office seating and workplace management application built for an
 | Database | Supabase Postgres + RLS |
 | Server logic | Supabase Edge Functions (Deno) |
 | Email | Resend |
-| Hosting | GitHub Pages (static build via GitHub Actions) |
+| Hosting | Vercel (or GitHub Pages via Actions) |
 
 ## Quick start
 
 ### Prerequisites
 
-- Node.js 20+ and pnpm (`npm install -g pnpm`)
+- Node.js 20+ and npm (or pnpm: `npm install -g pnpm`)
 - [Supabase CLI](https://supabase.com/docs/guides/cli) (optional for local development)
 
 ### Install dependencies
 
 ```bash
-pnpm install
+npm install
 ```
 
 ### Configure environment
@@ -40,14 +40,14 @@ cp .env.example .env
 ### Run locally
 
 ```bash
-pnpm dev
+npm run dev
 ```
 
 ### Run against local Supabase
 
 ```bash
 supabase start          # starts local Postgres, Auth, Edge Runtime
-pnpm dev                # front end at http://localhost:5173
+npm run dev             # front end at http://localhost:5173
 ```
 
 ## Database
@@ -55,13 +55,13 @@ pnpm dev                # front end at http://localhost:5173
 All migrations are in `supabase/migrations/` in numbered order. Apply to a remote project:
 
 ```bash
-supabase db push --project-ref plbdskgnrjtprkfgycdq
+supabase db push --project-ref vqgppnpggwlbtarqqnhg
 ```
 
 Apply seed data after migrations:
 
 ```bash
-supabase db query --file supabase/seed.sql --project-ref plbdskgnrjtprkfgycdq
+supabase db query --file supabase/seed.sql --project-ref vqgppnpggwlbtarqqnhg
 ```
 
 ## Edge Functions
@@ -72,7 +72,7 @@ Three functions are deployed to Supabase:
 |---|---|---|
 | `send-notifications` | Weekly/daily digest emails via Resend | No (called by cron) |
 | `process-approvals` | Approval outcome emails | Yes |
-| `export-report` | CSV export for reports page | Yes |
+| `invite-user` | Invitation emails | Yes |
 
 Set the following secrets in your Supabase project dashboard:
 
@@ -81,31 +81,40 @@ RESEND_API_KEY=re_...
 RESEND_FROM_EMAIL=noreply@yourdomain.com
 ```
 
-## GitHub Pages deployment
+## Vercel deployment (recommended)
 
-The project deploys automatically on push to `main` via `.github/workflows/deploy.yml`.
-
-Set these secrets in your GitHub repository settings:
+1. Import the GitHub repo in [vercel.com](https://vercel.com)
+2. Set these environment variables in the Vercel project settings:
 
 ```
 VITE_SUPABASE_URL        → your Supabase project URL
 VITE_SUPABASE_ANON_KEY   → your Supabase anon key
+VITE_APP_NAME            → Locustworks
+VITE_BASE_PATH           → /
 ```
 
-Set this variable (not secret):
+3. Add your Vercel deployment URL to Supabase → Authentication → URL Configuration.
+
+## GitHub Pages deployment (alternative)
+
+The project can also deploy via `.github/workflows/deploy.yml` on push to `main`/`master`.
+
+Set these variables in your GitHub repository settings (Settings → Variables):
 
 ```
-VITE_BASE_PATH   → /your-repo-name/   (for project pages)
-                   /                  (for user/org pages)
+VITE_SUPABASE_URL        → your Supabase project URL
+VITE_SUPABASE_ANON_KEY   → your Supabase anon key
+VITE_BASE_PATH           → /locustworks/   (for project pages)
+                           /               (for user/org pages)
 ```
 
 ## Supabase project
 
 | Property | Value |
 |---|---|
-| Project ID | `plbdskgnrjtprkfgycdq` |
+| Project ID | `vqgppnpggwlbtarqqnhg` |
 | Region | eu-west-2 (London) |
-| URL | https://plbdskgnrjtprkfgycdq.supabase.co |
+| URL | https://vqgppnpggwlbtarqqnhg.supabase.co |
 
 ## First admin setup
 
@@ -118,20 +127,17 @@ After signing in for the first time with your email:
 ## Testing
 
 ```bash
-pnpm test          # unit tests (Vitest)
-pnpm test:e2e      # E2E tests (Playwright) — requires running dev server
-pnpm typecheck     # TypeScript type check
+npm test               # unit tests (Vitest)
+npm run typecheck      # TypeScript type check
 ```
 
-## Phase 2 readiness
+## Key modules
 
-The following are designed-in from day one but not yet active:
-
-- **Multi-tenant**: `organisation_id` on all data tables; RLS policies ready for multiple orgs
-- **Outlook integration**: booking service abstracted via RPC functions — add calendar adapter
-- **Teams notifications**: notification layer separated from email delivery channel
-- **SSO**: auth abstraction in `src/lib/auth.ts` — swap provider without touching components
-
-## Specification
-
-See `office_seating_workplace_management_specification.docx` for the full product specification.
+| Module | Routes | Description |
+|---|---|---|
+| Desk booking | `/book` | Book desks and meeting rooms |
+| Rota | `/rota` | View assigned shifts, acknowledge, set attendance |
+| Timesheets | `/timesheets` | Log shifts, track break compliance, submit for approval |
+| Rota Builder | `/admin/rota` | Manager grid planner — assign, publish and cancel shifts |
+| Timesheet Review | `/admin/timesheet-approvals` | Manager approval queue |
+| Reports | `/reports` | Space utilisation + Workforce hours/compliance analytics |

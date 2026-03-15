@@ -10,7 +10,7 @@ const TEST_EMAIL = process.env.E2E_TEST_EMAIL ?? 'test@acme.example'
 test.describe('Authentication', () => {
   test('sign-in page renders', async ({ page }) => {
     await page.goto(BASE_URL)
-    await expect(page.locator('h1', { hasText: 'OfficePlan' })).toBeVisible()
+    await expect(page.locator('h1', { hasText: 'Locustworks' })).toBeVisible()
     await expect(page.locator('input[type="email"]')).toBeVisible()
   })
 

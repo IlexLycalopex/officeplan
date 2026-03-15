@@ -4,7 +4,7 @@ export async function signInWithMagicLink(email: string) {
   const { error } = await supabase.auth.signInWithOtp({
     email,
     options: {
-      // import.meta.env.BASE_URL is '/' in dev, '/officeplan/' on GitHub Pages.
+      // import.meta.env.BASE_URL is '/' in dev, '/locustworks/' on GitHub Pages.
       // This ensures the callback URL is always correct regardless of deployment base path.
       emailRedirectTo: `${window.location.origin}${import.meta.env.BASE_URL}auth/callback`,
     },

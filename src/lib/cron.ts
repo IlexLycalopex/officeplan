@@ -1,6 +1,6 @@
 /**
  * Simple cron parser/builder for 5-field expressions (minute hour dom month dow).
- * We only support the subset used in OfficePlan: specific minute, specific hour, * dom, * month, day list or *.
+ * We only support the subset used in Locustworks: specific minute, specific hour, * dom, * month, day list or *.
  */
 
 export interface CronParts {
